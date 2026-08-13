@@ -1,0 +1,12 @@
+{
+  "initial_capital": 500000,
+  "final_capital": 416975.46,
+  "net_pnl": -83024.54,
+  "return_pct": -16.6049,
+  "trades": 409,
+  "win_rate_pct": 22.98,
+  "profit_factor": 0.2808,
+  "max_drawdown_pct": 16.6111,
+  "total_costs": 30493.4,
+  "average_r_multiple": -0.5761
+}

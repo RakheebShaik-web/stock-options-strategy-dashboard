@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Team decision dashboard for the NSE 5-minute strategy and Dhan Data API subscription.">
+  <title>Strategy evidence review</title>
+  <style>
+    :root {
+      --ink: #13243a;
+      --muted: #5d6b7c;
+      --paper: #f2f6f8;
+      --panel: #ffffff;
+      --line: #cad5de;
+      --loss: #d63d35;
+      --loss-soft: #fee9e6;
+      --amber: #d88712;
+      --amber-soft: #fff2d8;
+      --blue: #176b87;
+      --blue-soft: #dceff4;
+      --good: #21765a;
+      --shadow: 0 22px 50px rgba(26, 50, 70, .09);
+      --display: Bahnschrift, "Arial Narrow", sans-serif;
+      --body: Aptos, Calibri, sans-serif;
+      --data: Consolas, "Courier New", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(19,36,58,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(19,36,58,.035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 32px 32px;
+      font-family: var(--body);
+    }
+
+    button, a { font: inherit; }
+    a { color: var(--blue); }
+    .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 0; border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; gap: 10px; align-items: center; font-family: var(--display); font-weight: 700; letter-spacing: .06em; }
+    .brand-mark { width: 11px; height: 26px; background: var(--loss); transform: skew(-14deg); }
+    .asof { color: var(--muted); font: 12px var(--data); text-transform: uppercase; }
+
+    .hero { padding: 78px 0 54px; display: grid; grid-template-columns: 1.35fr .65fr; gap: 56px; align-items: end; }
+    .kicker { font: 700 12px var(--data); color: var(--blue); letter-spacing: .12em; text-transform: uppercase; }
+    h1 { font: 800 clamp(48px, 7.2vw, 92px)/.89 var(--display); letter-spacing: -.055em; margin: 16px 0 25px; max-width: 850px; }
+    .hero p { font-size: 19px; line-height: 1.55; color: var(--muted); max-width: 720px; margin: 0; }
+    .decision {
+      background: var(--ink); color: white; padding: 28px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+    }
+    .decision::after { content: "HOLD"; position: absolute; right: -12px; bottom: -28px; font: 900 90px var(--display); color: rgba(255,255,255,.055); transform: rotate(-7deg); }
+    .decision-label { font: 700 11px var(--data); color: #aac7d3; letter-spacing: .12em; text-transform: uppercase; }
+    .decision-value { font: 800 38px var(--display); color: #ff6d62; margin: 9px 0; }
+    .decision p { color: #d5e0e7; font-size: 15px; line-height: 1.5; }
+
+    .metric-grid { display: grid; grid-template-columns: repeat(6, 1fr); background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .metric { padding: 24px 19px; border-right: 1px solid var(--line); min-height: 138px; }
+    .metric:last-child { border: 0; }
+    .metric span { display: block; color: var(--muted); font: 11px var(--data); text-transform: uppercase; letter-spacing: .06em; min-height: 30px; }
+    .metric strong { display: block; font: 750 29px var(--display); margin-top: 13px; }
+    .metric.loss strong { color: var(--loss); }
+
+    section { padding: 66px 0 0; }
+    .section-head { display: grid; grid-template-columns: 150px 1fr; gap: 24px; align-items: baseline; margin-bottom: 28px; }
+    .section-no { font: 12px var(--data); color: var(--blue); }
+    h2 { font: 750 38px/1 var(--display); letter-spacing: -.025em; margin: 0; }
+
+    .evidence-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 24px; }
+    .card { background: var(--panel); border: 1px solid var(--line); padding: 28px; box-shadow: var(--shadow); }
+    .card h3 { font: 700 20px var(--display); margin: 0 0 6px; }
+    .card-sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+
+    .bars { display: grid; gap: 13px; }
+    .bar-row { display: grid; grid-template-columns: 92px 1fr 92px; gap: 12px; align-items: center; }
+    .bar-name, .bar-value { font: 12px var(--data); }
+    .bar-value { text-align: right; color: var(--loss); }
+    .track { height: 10px; background: #e7edf1; overflow: hidden; }
+    .fill { height: 100%; background: var(--loss); width: var(--w); transform-origin: left; animation: grow .8s both; }
+    @keyframes grow { from { transform: scaleX(0); } }
+
+    .holdout { background: var(--loss-soft); border-left: 5px solid var(--loss); }
+    .holdout-number { font: 800 58px var(--display); color: var(--loss); margin: 20px 0 2px; }
+    .holdout small { color: var(--muted); }
+    .holdout ul { padding-left: 19px; line-height: 1.65; }
+
+    .economics { display: grid; grid-template-columns: .72fr 1.28fr; gap: 24px; }
+    .price-card { background: var(--amber-soft); border-color: #e9ca90; }
+    .price { font: 800 62px var(--display); color: #9a5b00; margin: 18px 0 0; }
+    .price-note { color: #72552c; }
+    .comparison { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+    .comparison-row { display: grid; grid-template-columns: 165px 1fr 100px; gap: 16px; padding: 17px 18px; background: var(--panel); align-items: center; }
+    .comparison-row strong { font-family: var(--display); }
+    .status { justify-self: end; font: 700 11px var(--data); padding: 6px 8px; text-transform: uppercase; }
+    .status.no { color: var(--loss); background: var(--loss-soft); }
+    .status.maybe { color: #855100; background: var(--amber-soft); }
+    .status.yes { color: var(--good); background: #dcf1e8; }
+
+    .gates { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .gate { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: var(--panel); border: 1px solid var(--line); padding: 21px; }
+    .check { width: 28px; height: 28px; border: 2px solid var(--line); display: grid; place-items: center; color: var(--muted); font-family: var(--data); }
+    .gate strong { display: block; font-family: var(--display); margin-bottom: 4px; }
+    .gate p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14px; }
+
+    .next-step { margin: 56px 0 70px; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; padding: 32px; background: var(--blue-soft); border: 1px solid #abcbd5; }
+    .next-step h3 { margin: 0 0 7px; font: 750 25px var(--display); }
+    .next-step p { margin: 0; color: #3f6370; }
+    .actions { display: flex; gap: 10px; }
+    .button { border: 0; padding: 11px 16px; cursor: pointer; text-decoration: none; font-weight: 700; }
+    .button.primary { background: var(--ink); color: white; }
+    .button.secondary { background: white; color: var(--ink); border: 1px solid var(--line); }
+
+    footer { border-top: 1px solid var(--line); padding: 25px 0 42px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .source-list { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 8px; }
+
+    @media (max-width: 900px) {
+      .hero, .evidence-grid, .economics { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: repeat(2, 1fr); }
+      .metric:nth-child(2n) { border-right: 0; }
+      .gates { grid-template-columns: 1fr; }
+      .next-step { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 24px, 1180px); }
+      .hero { padding-top: 48px; }
+      h1 { font-size: 52px; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .metric { border-right: 0; border-bottom: 1px solid var(--line); }
+      .section-head { grid-template-columns: 1fr; gap: 8px; }
+      .bar-row { grid-template-columns: 76px 1fr 78px; gap: 8px; }
+      .comparison-row { grid-template-columns: 1fr; }
+      .status { justify-self: start; }
+      .topbar .asof { display: none; }
+    }
+    @media print {
+      body { background: white; }
+      .shell { width: 100%; }
+      .topbar, .actions { display: none; }
+      .hero { padding-top: 24px; }
+      section { break-inside: avoid; }
+      .card, .metric-grid { box-shadow: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .fill { animation: none; } }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <div class="brand"><span class="brand-mark"></span> Strategy evidence review</div>
+    <div class="asof">Evidence through 10 Aug 2026</div>
+  </header>
+
+  <main class="shell">
+    <div class="hero">
+      <div>
+        <div class="kicker">NSE 5-minute cash-stock strategy</div>
+        <h1>The data says<br>do not scale yet.</h1>
+        <p>A team decision brief on whether the current strategy evidence justifies a recurring Dhan Data API subscription.</p>
+      </div>
+      <aside class="decision">
+        <div class="decision-label">Current recommendation</div>
+        <div class="decision-value">Do not subscribe</div>
+        <p>Keep the recurring subscription on hold. A one-month research purchase is defensible only if free or existing data sources cannot complete the validation.</p>
+      </aside>
+    </div>
+
+    <div class="metric-grid" aria-label="Headline backtest metrics">
+      <div class="metric loss"><span>Total return</span><strong>-16.60%</strong></div>
+      <div class="metric loss"><span>Net P&amp;L</span><strong>-₹83,025</strong></div>
+      <div class="metric"><span>Trades</span><strong>409</strong></div>
+      <div class="metric loss"><span>Profit factor</span><strong>0.28</strong></div>
+      <div class="metric loss"><span>Win rate</span><strong>22.98%</strong></div>
+      <div class="metric loss"><span>Max drawdown</span><strong>16.61%</strong></div>
+    </div>
+
+    <section>
+      <div class="section-head"><div class="section-no">01 / EVIDENCE</div><h2>The weakness is broad, not isolated.</h2></div>
+      <div class="evidence-grid">
+        <article class="card">
+          <h3>Net P&amp;L by symbol</h3>
+          <p class="card-sub">All ten tested symbols were unprofitable. Longer bars indicate larger losses.</p>
+          <div class="bars">
+            <div class="bar-row"><span class="bar-name">LT</span><div class="track"><div class="fill" style="--w:100%"></div></div><span class="bar-value">-₹12,470</span></div>
+            <div class="bar-row"><span class="bar-name">AXISBANK</span><div class="track"><div class="fill" style="--w:79.4%"></div></div><span class="bar-value">-₹9,904</span></div>
+            <div class="bar-row"><span class="bar-name">TCS</span><div class="track"><div class="fill" style="--w:77.2%"></div></div><span class="bar-value">-₹9,623</span></div>
+            <div class="bar-row"><span class="bar-name">SBIN</span><div class="track"><div class="fill" style="--w:75.5%"></div></div><span class="bar-value">-₹9,420</span></div>
+            <div class="bar-row"><span class="bar-name">HDFCBANK</span><div class="track"><div class="fill" style="--w:75%"></div></div><span class="bar-value">-₹9,358</span></div>
+            <div class="bar-row"><span class="bar-name">INFY</span><div class="track"><div class="fill" style="--w:74.6%"></div></div><span class="bar-value">-₹9,306</span></div>
+            <div class="bar-row"><span class="bar-name">KOTAKBANK</span><div class="track"><div class="fill" style="--w:70.2%"></div></div><span class="bar-value">-₹8,754</span></div>
+            <div class="bar-row"><span class="bar-name">RELIANCE</span><div class="track"><div class="fill" style="--w:38.6%"></div></div><span class="bar-value">-₹4,809</span></div>
+            <div class="bar-row"><span class="bar-name">ICICIBANK</span><div class="track"><div class="fill" style="--w:38.5%"></div></div><span class="bar-value">-₹4,799</span></div>
+            <div class="bar-row"><span class="bar-name">ITC</span><div class="track"><div class="fill" style="--w:36.8%"></div></div><span class="bar-value">-₹4,583</span></div>
+          </div>
+        </article>
+        <aside class="card holdout">
+          <h3>Chronological holdout also failed</h3>
+          <div class="holdout-number">-₹25,955</div>
+          <small>Final 30% of trades · 123 trades</small>
+          <ul>
+            <li>Win rate: 22.76%</li>
+            <li>Profit factor: 0.232</li>
+            <li>Long and short sides both lost money</li>
+            <li>Modeled costs: ₹30,493 overall</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="section-no">02 / ECONOMICS</div><h2>Data is useful. This purchase is premature.</h2></div>
+      <div class="economics">
+        <article class="card price-card">
+          <h3>Dhan Data API</h3>
+          <div class="price">₹499</div>
+          <p class="price-note">plus applicable taxes, recurring every 30 days.</p>
+          <a href="https://dhan.co/support/platforms/dhanhq-api/how-does-the-dhanhq-data-api-subscription-work/" target="_blank" rel="noreferrer">Official pricing source ↗</a>
+        </article>
+        <div class="comparison" role="table" aria-label="Subscription decision comparison">
+          <div class="comparison-row" role="row"><strong>Recurring subscription</strong><span>Not supported by current performance evidence.</span><span class="status no">No</span></div>
+          <div class="comparison-row" role="row"><strong>One-month research test</strong><span>Reasonable only if Upstox or other existing sources cannot supply the required history.</span><span class="status maybe">Conditional</span></div>
+          <div class="comparison-row" role="row"><strong>Live deployment</strong><span>Not justified until robust out-of-sample criteria are met after costs.</span><span class="status no">No</span></div>
+          <div class="comparison-row" role="row"><strong>Strategy redesign</strong><span>Highest-value next action before purchasing more data.</span><span class="status yes">Proceed</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="section-no">03 / GATES</div><h2>Evidence required before reconsideration.</h2></div>
+      <div class="gates">
+        <div class="gate"><div class="check">01</div><div><strong>Multi-year walk-forward test</strong><p>Select parameters only on training windows and evaluate untouched future windows.</p></div></div>
+        <div class="gate"><div class="check">02</div><div><strong>Profit factor above 1.2</strong><p>Must remain positive after realistic brokerage, taxes, spreads, and adverse slippage.</p></div></div>
+        <div class="gate"><div class="check">03</div><div><strong>Cross-symbol durability</strong><p>Results should not depend on a single stock, year, regime, or parameter combination.</p></div></div>
+        <div class="gate"><div class="check">04</div><div><strong>Execution realism</strong><p>Eliminate invalid overnight cash shorts and model gaps, liquidity, and portfolio constraints.</p></div></div>
+      </div>
+    </section>
+
+    <div class="next-step">
+      <div><h3>Recommended next meeting decision</h3><p>Approve strategy redesign and free-data validation. Defer recurring Dhan spend until the gates above are met.</p></div>
+      <div class="actions"><button class="button secondary" onclick="window.print()">Print brief</button><a class="button secondary" href="data/trades.csv" download>Download trades</a><a class="button primary" href="#" onclick="copySummary(event)">Copy decision</a></div>
+    </div>
+  </main>
+
+  <footer class="shell">
+    <strong>Scope and limitations</strong><br>
+    Based on a hypothetical 5-minute cash-stock simulation from 19 May to 10 August 2026 across ten NSE symbols. Yahoo data is suitable for pipeline validation, not final investment evidence. Results do not guarantee future performance and are not investment advice.
+    <div class="source-list"><a href="data/summary.json">Summary data</a><a href="data/data_quality.json">Data-quality audit</a><a href="data/trades.csv">Trade ledger</a><a href="data/equity.csv">Equity ledger</a><a href="METHODOLOGY.md">Methodology</a><a href="https://dhanhq.co/docs/v2/historical-data/" target="_blank" rel="noreferrer">Dhan historical-data documentation ↗</a></div>
+  </footer>
+
+  <script>
+    async function copySummary(event) {
+      event.preventDefault();
+      const text = "Decision: Do not start a recurring Dhan Data API subscription yet. The current 409-trade test returned -16.60%, profit factor 0.28, and every tested symbol lost money. Redesign and validate with multi-year walk-forward data first.";
+      await navigator.clipboard.writeText(text);
+      const link = event.currentTarget;
+      const original = link.textContent;
+      link.textContent = "Copied";
+      setTimeout(() => link.textContent = original, 1400);
+    }
+  </script>
+</body>
+</html>

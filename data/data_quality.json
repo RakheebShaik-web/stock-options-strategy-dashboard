@@ -1,0 +1,10 @@
+{
+  "bars": 43371,
+  "symbols": 10,
+  "start": "2026-05-19 09:15:00+05:30",
+  "end": "2026-08-10 15:15:00+05:30",
+  "duplicate_symbol_timestamps": 0,
+  "missing_values": 0,
+  "zero_volume_bars": 571,
+  "invalid_ohlc_bars": 0
+}
