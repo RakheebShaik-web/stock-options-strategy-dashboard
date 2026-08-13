@@ -81,10 +81,7 @@
     .health-value { margin-top: 12px; font: 750 24px var(--display); }
     .health-value.ok { color: var(--green); }
 
-    footer { padding: 26px 0 42px; display: flex; justify-content: space-between; gap: 20px; color: var(--slate); font: 11px/1.5 var(--mono); }
-    .downloads { display: flex; flex-wrap: wrap; gap: 16px; }
-    .downloads a { color: var(--blue); text-decoration: none; border-bottom: 1px solid transparent; }
-    .downloads a:hover { border-color: currentColor; }
+    .bottom-space { height: 42px; }
 
     @media (max-width: 900px) {
       .kpis { grid-template-columns: repeat(3, 1fr); }
@@ -104,7 +101,6 @@
       .kpi:nth-last-child(-n+2) { border-bottom: 0; }
       .health { grid-template-columns: 1fr 1fr; }
       .bar-row { grid-template-columns: 75px 1fr 76px; gap: 7px; }
-      footer { flex-direction: column; }
     }
     @media (prefers-reduced-motion: reduce) { .fill { animation: none; } }
   </style>
@@ -168,17 +164,13 @@
       </section>
     </div>
 
-    <section class="health" aria-label="Data health metrics">
-      <div class="health-item"><div class="label">Five-minute bars</div><div class="health-value">43,371</div></div>
-      <div class="health-item"><div class="label">Duplicate timestamps</div><div class="health-value ok">0</div></div>
-      <div class="health-item"><div class="label">Missing values</div><div class="health-value ok">0</div></div>
-      <div class="health-item"><div class="label">Invalid OHLC bars</div><div class="health-value ok">0</div></div>
+    <section class="health" aria-label="Additional performance metrics">
+      <div class="health-item"><div class="label">Starting capital</div><div class="health-value">₹500,000</div></div>
+      <div class="health-item"><div class="label">Final equity</div><div class="health-value">₹416,975</div></div>
+      <div class="health-item"><div class="label">Modeled costs</div><div class="health-value">₹30,493</div></div>
+      <div class="health-item"><div class="label">Average trade</div><div class="health-value negative">−₹203</div></div>
     </section>
-
-    <footer>
-      <span>Realized-exit simulation · modeled costs ₹30,493 · average R −0.576</span>
-      <nav class="downloads"><a href="data/summary.json">Summary</a><a href="data/trades.csv">Trades CSV</a><a href="data/equity.csv">Equity CSV</a><a href="data/data_quality.json">Data quality</a></nav>
-    </footer>
+    <div class="bottom-space" aria-hidden="true"></div>
   </main>
 </body>
 </html>
