@@ -81,6 +81,24 @@
     .health-value { margin-top: 12px; font: 750 24px var(--display); }
     .health-value.ok { color: var(--green); }
 
+    .strategy { margin-top: 22px; }
+    .strategy-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+    .rule { background: var(--card); padding: 22px; }
+    .rule-tag { color: var(--blue); font: 600 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .rule h3 { margin: 10px 0 7px; font: 700 18px var(--display); }
+    .rule p { margin: 0; color: var(--slate); font-size: 13px; line-height: 1.55; }
+
+    .trades-card { margin-top: 22px; overflow: hidden; }
+    .table-scroll { overflow-x: auto; }
+    .trades-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+    .trades-table th { padding: 0 16px 13px 0; color: var(--slate); font: 10px var(--mono); text-align: right; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+    .trades-table th:first-child, .trades-table th:nth-child(2), .trades-table td:first-child, .trades-table td:nth-child(2) { text-align: left; }
+    .trades-table td { padding: 14px 16px 14px 0; text-align: right; border-bottom: 1px solid #e9eef2; font: 11px var(--mono); }
+    .trades-table tr:last-child td { border: 0; }
+    .positive { color: var(--green); }
+    .badge { display: inline-block; padding: 4px 7px; background: var(--blue-soft); color: var(--blue); font: 600 9px var(--mono); text-transform: uppercase; }
+    .badge.stop { color: var(--red); background: var(--red-soft); }
+
     .bottom-space { height: 42px; }
 
     @media (max-width: 900px) {
@@ -90,6 +108,7 @@
       .dashboard-grid { grid-template-columns: 1fr; }
       .equity-card { grid-column: auto; }
       .health { grid-template-columns: repeat(2, 1fr); }
+      .strategy-flow { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 580px) {
       .shell { width: min(100% - 24px, 1180px); }
@@ -101,6 +120,7 @@
       .kpi:nth-last-child(-n+2) { border-bottom: 0; }
       .health { grid-template-columns: 1fr 1fr; }
       .bar-row { grid-template-columns: 75px 1fr 76px; gap: 7px; }
+      .strategy-flow { grid-template-columns: 1fr; }
     }
     @media (prefers-reduced-motion: reduce) { .fill { animation: none; } }
   </style>
@@ -128,9 +148,9 @@
           <defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cf443d" stop-opacity=".22"/><stop offset="1" stop-color="#cf443d" stop-opacity=".02"/></linearGradient></defs>
           <line class="chart-grid" x1="55" y1="25" x2="1060" y2="25"/><line class="chart-grid" x1="55" y1="112" x2="1060" y2="112"/><line class="chart-grid" x1="55" y1="200" x2="1060" y2="200"/>
           <text x="0" y="29">₹500k</text><text x="0" y="116">₹460k</text><text x="0" y="204">₹420k</text>
-          <path class="area" d="M55,26 L112,28 L160,35 L205,32 L258,49 L307,52 L350,65 L399,61 L450,79 L498,84 L548,97 L598,100 L648,123 L698,128 L748,142 L798,151 L848,165 L900,181 L950,188 L1008,207 L1060,218 L1060,235 L55,235 Z"/>
-          <path class="equity-line" d="M55,26 L112,28 L160,35 L205,32 L258,49 L307,52 L350,65 L399,61 L450,79 L498,84 L548,97 L598,100 L648,123 L698,128 L748,142 L798,151 L848,165 L900,181 L950,188 L1008,207 L1060,218"/>
-          <circle class="end-dot" cx="1060" cy="218" r="6"/>
+          <path id="equityArea" class="area" d="M55,26 L1060,218 L1060,235 L55,235 Z"/>
+          <path id="equityLine" class="equity-line" d="M55,26 L1060,218"/>
+          <circle id="equityEnd" class="end-dot" cx="1060" cy="218" r="6"/>
           <text x="55" y="255">19 MAY</text><text x="510" y="255">30 JUN</text><text x="1000" y="255">10 AUG</text>
         </svg>
       </section>
@@ -170,7 +190,56 @@
       <div class="health-item"><div class="label">Modeled costs</div><div class="health-value">₹30,493</div></div>
       <div class="health-item"><div class="label">Average trade</div><div class="health-value negative">−₹203</div></div>
     </section>
+
+    <section class="card strategy">
+      <div class="card-head"><h2>Strategy logic</h2><div class="meta">5-MINUTE BARS</div></div>
+      <div class="strategy-flow">
+        <div class="rule"><div class="rule-tag">Signal</div><h3>Opening-range break</h3><p>The 09:15 and 09:20 candles define the range. Signals begin at 09:25.</p></div>
+        <div class="rule"><div class="rule-tag">Confirmation</div><h3>RSI + volume</h3><p>Long above RSI 60; short below RSI 40. Current volume must exceed the previous bar.</p></div>
+        <div class="rule"><div class="rule-tag">Entry</div><h3>Three-bar validity</h3><p>Enter on a break of the signal candle high or low within the next three candles.</p></div>
+        <div class="rule"><div class="rule-tag">Risk</div><h3>1.5R target</h3><p>Stop at the opposite side of the signal candle. Trail after two opposing candles.</p></div>
+      </div>
+    </section>
+
+    <section class="card trades-card">
+      <div class="card-head"><h2>Recent trades</h2><div class="meta">8 OF 409</div></div>
+      <div class="table-scroll">
+        <table class="trades-table">
+          <thead><tr><th>Symbol</th><th>Side</th><th>Entry</th><th>Exit</th><th>Entry price</th><th>Exit price</th><th>Reason</th><th>Net P&amp;L</th><th>R</th></tr></thead>
+          <tbody>
+            <tr><td>KOTAKBANK</td><td>Short</td><td>10:05</td><td>10:10</td><td>387.26</td><td>388.19</td><td><span class="badge stop">Stop</span></td><td class="negative">−₹376.85</td><td>−1.57</td></tr>
+            <tr><td>RELIANCE</td><td>Short</td><td>09:40</td><td>10:15</td><td>1,323.74</td><td>1,326.16</td><td><span class="badge stop">Stop</span></td><td class="negative">−₹302.67</td><td>−1.83</td></tr>
+            <tr><td>ICICIBANK</td><td>Short</td><td>10:00</td><td>10:20</td><td>1,418.29</td><td>1,419.71</td><td><span class="badge stop">Stop</span></td><td class="negative">−₹199.80</td><td>−0.25</td></tr>
+            <tr><td>ITC</td><td>Short</td><td>09:45</td><td>10:35</td><td>284.06</td><td>284.49</td><td><span class="badge stop">Stop</span></td><td class="negative">−₹266.13</td><td>−1.12</td></tr>
+            <tr><td>TCS</td><td>Long</td><td>09:55</td><td>10:45</td><td>2,460.43</td><td>2,464.47</td><td><span class="badge stop">Stop</span></td><td class="positive">+₹128.00</td><td>+0.22</td></tr>
+            <tr><td>HDFCBANK</td><td>Long</td><td>10:05</td><td>10:50</td><td>734.77</td><td>735.68</td><td><span class="badge stop">Stop</span></td><td class="positive">+₹80.51</td><td>+0.17</td></tr>
+            <tr><td>LT</td><td>Long</td><td>10:20</td><td>10:55</td><td>4,056.63</td><td>4,054.77</td><td><span class="badge stop">Stop</span></td><td class="negative">−₹128.68</td><td>−0.38</td></tr>
+            <tr><td>SBIN</td><td>Short</td><td>14:35</td><td>15:00</td><td>1,074.66</td><td>1,074.44</td><td><span class="badge stop">Stop</span></td><td class="negative">−₹48.64</td><td>−0.17</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
     <div class="bottom-space" aria-hidden="true"></div>
   </main>
+  <script>
+    fetch("data/equity.csv").then(response => response.text()).then(text => {
+      const rows = text.trim().split(/\r?\n/).slice(1).map(line => Number(line.split(",")[1])).filter(Number.isFinite);
+      if (!rows.length) return;
+      rows.unshift(500000);
+      const left = 55, right = 1060, top = 25, bottom = 235;
+      const min = Math.min(...rows) - 2500, max = Math.max(...rows) + 2500;
+      const points = rows.map((value, index) => {
+        const x = left + index * (right - left) / (rows.length - 1);
+        const y = top + (max - value) * (bottom - top) / (max - min);
+        return [x, y];
+      });
+      const line = points.map(([x, y], index) => `${index ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+      document.getElementById("equityLine").setAttribute("d", line);
+      document.getElementById("equityArea").setAttribute("d", `${line} L${right},${bottom} L${left},${bottom} Z`);
+      const [x, y] = points.at(-1);
+      document.getElementById("equityEnd").setAttribute("cx", x);
+      document.getElementById("equityEnd").setAttribute("cy", y);
+    });
+  </script>
 </body>
 </html>
