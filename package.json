@@ -4,6 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "npx serve .",
-    "build": "node -e \"console.log('Static dashboard: no build required')\""
+    "build": "node build.mjs"
   }
 }
